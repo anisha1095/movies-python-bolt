@@ -8,22 +8,39 @@
 </head>
 
 <body>
-<div id="graph">
+<div id="graph" style="margin:10px">
 </div>
 
 <style type="text/css">
-
+    .node circle {
+        stroke: #3a403d;
+        stroke-width: .5px;
+    }
     html, body, #graph {
-    width: 900px;
-    height: 500px;
-}
-</style>
 
+    }
+    text {
+        font-family: sans-serif;
+        font-size: 10px;
+        color: black;
+    }
+    .links line {
+  stroke: #999;
+  stroke-opacity: 0.6;
+}
+
+text {
+  font-family: sans-serif;
+  font-size: 10px;
+    text-color:"red"
+}
+
+</style>
 <script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
 <script src="https://d3js.org/d3.v4.min.js" type="text/javascript"></script>
 
 <script type="text/javascript">
-    const width = 800, height = 800;
+    var width = window.innerWidth, height = window.innerWidth, sizeDivisor = 100, nodePadding = 2.5;
 
     const svg = d3.select("#graph")
         .append("svg")
@@ -40,9 +57,9 @@
         console.log(graph)
         var simulation = d3.forceSimulation()
             .force("link", d3.forceLink().id(function(d) { return d.index }))
-            .force("collide",d3.forceCollide( function(d){return d.r + 8 }).iterations(16) )
+            .force("collide",d3.forceCollide(function(d){return d.weight + 2 }).iterations(3))
             .force("charge", d3.forceManyBody())
-            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("center", d3.forceCenter(width/2 , height/4 ))
             .force("y", d3.forceY(0))
             .force("x", d3.forceX(0))
 
@@ -54,30 +71,46 @@
             .append("line")
             .attr("stroke", "black")
 
+
+
         var node = svg.append("g")
             .attr("class", "nodes")
-            .selectAll("circle")
+            .selectAll("g")
             .data(graph.nodes)
-            .enter().append("circle")
-            .attr("r", function(d){  return d.width })
-            .attr("fill", function(d) {return color_scheme[d.label]})
-            .call(d3.drag()
-                .on("start", dragstarted)
-                .on("drag", dragged)
-                .on("end", dragended));
+            .enter().append("g")
+
+        var circles = node.append("circle")
+              .attr("r", function(d){  return d.weight/4 })
+              .attr("fill", function(d) { return color_scheme[d.label]; })
+              .call(d3.drag()
+                  .on("start", dragstarted)
+                  .on("drag", dragged)
+                  .on("end", dragended));
 
 
-        var ticked = function() {
+        var lables = node.append("text")
+      .text(function(d) {
+        return d.title;
+      })
+      .attr('x', 6)
+      .attr('y', 3);
+
+    node.append("title")
+      .text(function(d) { return d.title; });
+
+	   var ticked = function() {
             link
                 .attr("x1", function(d) { return d.source.x; })
                 .attr("y1", function(d) { return d.source.y; })
                 .attr("x2", function(d) { return d.target.x; })
                 .attr("y2", function(d) { return d.target.y; });
 
-            node
-                .attr("cx", function(d) { return d.x; })
-                .attr("cy", function(d) { return d.y; });
-        }
+           node
+            .attr("transform", function(d) {
+                 return "translate(" + d.x + "," + d.y + ")";
+            })
+       }
+
 
         simulation
             .nodes(graph.nodes)
@@ -85,6 +118,7 @@
 
         simulation.force("link")
             .links(graph.links);
+
 
 
 
